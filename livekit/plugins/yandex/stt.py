@@ -77,6 +77,8 @@ class _STTOptions:
     language_hints: list[str] = field(default_factory=list)
     language_restriction: str = "whitelist"  # "whitelist" | "blacklist" | "none"
     external_eou: bool = True
+    eou_sensitivity: str = "default"  # "default" | "high" — for DefaultEouClassifier
+    max_pause_between_words_hint_ms: int = 0  # 0 = unset; Yandex will use its own
     audio_processing: str = "real_time"  # "real_time" | "full_data"
 
 
@@ -104,6 +106,8 @@ class STT(stt.STT):
         raw_results: bool = False,
         interim_results: bool = True,
         external_eou: bool = True,
+        eou_sensitivity: str = "default",
+        max_pause_between_words_hint_ms: int = 0,
         rest_endpoint: str = STT_REST_BASE,
         grpc_endpoint: str = STT_GRPC_ENDPOINT,
         http_session: aiohttp.ClientSession | None = None,
@@ -132,6 +136,10 @@ class STT(stt.STT):
             )
         if language_restriction not in ("whitelist", "blacklist", "none"):
             raise ValueError("language_restriction must be 'whitelist', 'blacklist' or 'none'")
+        if eou_sensitivity not in ("default", "high"):
+            raise ValueError("eou_sensitivity must be 'default' or 'high'")
+        if max_pause_between_words_hint_ms < 0:
+            raise ValueError("max_pause_between_words_hint_ms must be >= 0")
         self._opts = _STTOptions(
             model=model,
             language=language,
@@ -144,6 +152,8 @@ class STT(stt.STT):
             language_hints=list(language_hints or []),
             language_restriction=language_restriction,
             external_eou=external_eou,
+            eou_sensitivity=eou_sensitivity,
+            max_pause_between_words_hint_ms=max_pause_between_words_hint_ms,
         )
         self._session = http_session
         self._channel: grpc.aio.Channel | None = None
@@ -349,8 +359,18 @@ class SpeechStream(stt.RecognizeStream):
                 external_classifier=stt_pb2.ExternalEouClassifier()
             )
         else:
+            sensitivity = (
+                stt_pb2.DefaultEouClassifier.HIGH
+                if self._stt._opts.eou_sensitivity == "high"
+                else stt_pb2.DefaultEouClassifier.DEFAULT
+            )
+            default_classifier = stt_pb2.DefaultEouClassifier(type=sensitivity)
+            if self._stt._opts.max_pause_between_words_hint_ms > 0:
+                default_classifier.max_pause_between_words_hint_ms = (
+                    self._stt._opts.max_pause_between_words_hint_ms
+                )
             eou_classifier = stt_pb2.EouClassifierOptions(
-                default_classifier=stt_pb2.DefaultEouClassifier()
+                default_classifier=default_classifier
             )
 
         session_options = stt_pb2.StreamingOptions(

@@ -399,7 +399,6 @@ class SynthesizeStream(tts.SynthesizeStream):
         except asyncio.TimeoutError as e:
             raise APITimeoutError("Yandex TTS stream timed out") from e
         finally:
-            await gen.aclose()
             self._tts._synthesized_chars += segment_chars
             logger.debug(
                 "Yandex TTS stream segment %s completed in %.1f ms (chars=%d)",

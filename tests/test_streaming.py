@@ -70,9 +70,40 @@ async def test_stt_default_eou_when_external_disabled() -> None:
             req.session_options.eou_classifier.WhichOneof("Classifier")
             == "default_classifier"
         )
+        default = req.session_options.eou_classifier.default_classifier
+        assert default.type == stt_pb2.DefaultEouClassifier.DEFAULT
     finally:
         await stream.aclose()
         await stt.aclose()
+
+
+async def test_stt_high_eou_sensitivity() -> None:
+    stt = STT(external_eou=False, eou_sensitivity="high")
+    stream = stt.stream()
+    try:
+        req = stream._build_session_options_request()
+        default = req.session_options.eou_classifier.default_classifier
+        assert default.type == stt_pb2.DefaultEouClassifier.HIGH
+    finally:
+        await stream.aclose()
+        await stt.aclose()
+
+
+async def test_stt_max_pause_hint_ms() -> None:
+    stt = STT(external_eou=False, max_pause_between_words_hint_ms=400)
+    stream = stt.stream()
+    try:
+        req = stream._build_session_options_request()
+        default = req.session_options.eou_classifier.default_classifier
+        assert default.max_pause_between_words_hint_ms == 400
+    finally:
+        await stream.aclose()
+        await stt.aclose()
+
+
+async def test_stt_rejects_bad_eou_sensitivity() -> None:
+    with pytest.raises(ValueError):
+        STT(eou_sensitivity="bogus")
 
 
 async def test_tts_stream_options() -> None:
