@@ -1,0 +1,71 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "livekit-plugins-yandex"
+dynamic = ["version"]
+description = "Agent Framework plugin for Yandex SpeechKit (STT + TTS)"
+license = "Apache-2.0"
+requires-python = ">=3.10"
+authors = [{ name = "livekit-plugins-yandex contributors" }]
+keywords = ["voice", "ai", "realtime", "audio", "livekit", "yandex", "speechkit", "stt", "tts"]
+classifiers = [
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Topic :: Multimedia :: Sound/Audio",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3 :: Only",
+]
+dependencies = [
+    "grpcio>=1.60,<2",
+    "protobuf>=4.25,<6",
+    "googleapis-common-protos>=1.60",
+    "aiohttp>=3.9,<4",
+    "livekit-agents>=1.5.4",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "mypy>=1.8",
+    "ruff>=0.3",
+    "grpcio-tools>=1.60,<2",
+]
+
+[project.urls]
+Homepage = "https://github.com/smyslove/livekit-plugins-yandex"
+Repository = "https://github.com/smyslove/livekit-plugins-yandex"
+
+[tool.hatch.version]
+path = "livekit/plugins/yandex/version.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["livekit"]
+
+[tool.hatch.build.targets.sdist]
+include = ["/livekit"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "B", "UP"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = false
+warn_unused_ignores = true
+ignore_missing_imports = true
+exclude = ["livekit/plugins/yandex/_proto/"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
