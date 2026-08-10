@@ -49,12 +49,26 @@ async def test_stt_session_options_auto_with_hints() -> None:
         await stt.aclose()
 
 
-async def test_stt_session_options_auto_no_restriction() -> None:
+async def test_stt_session_options_auto_without_hints() -> None:
     stt = STT(language="auto")
     stream = stt.stream()
     try:
         req = stream._build_session_options_request()
-        # No hints and auto language -> no restriction.
+        # Auto language and no hints -> unrestricted auto-detection.
+        restr = req.session_options.recognition_model.language_restriction
+        assert restr.restriction_type == stt_pb2.LanguageRestrictionOptions.WHITELIST
+        assert list(restr.language_code) == ["auto"]
+    finally:
+        await stream.aclose()
+        await stt.aclose()
+
+
+async def test_stt_session_options_restriction_none() -> None:
+    stt = STT(language="auto", language_restriction="none")
+    stream = stt.stream()
+    try:
+        req = stream._build_session_options_request()
+        # Explicit opt-out -> no restriction is sent at all.
         assert not req.session_options.recognition_model.HasField("language_restriction")
     finally:
         await stream.aclose()

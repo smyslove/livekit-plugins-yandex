@@ -312,9 +312,10 @@ class SpeechStream(stt.RecognizeStream):
         lang_restriction = self._stt._opts.language_restriction
         codes: list[str]
         if self._language == "auto":
-            codes = list(self._stt._opts.language_hints)
-            if not codes:
-                return None
+            # Yandex enables auto-detection through the special "auto" code inside the
+            # whitelist. Sending no restriction at all is not the same thing: the server
+            # then falls back to its default language and transcribes everything as Russian.
+            codes = list(self._stt._opts.language_hints) or ["auto"]
             restriction_type = stt_pb2.LanguageRestrictionOptions.WHITELIST
         else:
             codes = [self._language]
