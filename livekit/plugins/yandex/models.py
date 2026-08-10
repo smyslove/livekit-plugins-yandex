@@ -54,7 +54,11 @@ STTLanguage = Literal[
     "nl-NL",
     "it-IT",
     "pl-PL",
-    "he-HE",
+    "he-IL",
+    "es-ES",
+    "fi-FI",
+    "sv-SE",
+    "pt-PT",
     "pt-BR",
 ]
 
